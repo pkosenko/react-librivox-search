@@ -1,0 +1,6 @@
+# all backup folders
+backup*/
+stuff/
+notes/
+node_modules/
+bower_components/

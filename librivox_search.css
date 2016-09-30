@@ -1,0 +1,28 @@
+/**
+   Styles are borrowed from: https://librivox.org/wp-content/themes/librivox/style.css
+       and https://librivox.org/css/style.css (import)  You may want to look at those files.
+   Except that we are not using Librivox's specially designed logo web fonts,
+   Acknowledge Sonia the Librivox designer: http://nudgedesign.ca     
+*/
+
+.librivoxSearchWidget {
+    font-family: Helvetica, Arial, sans-serif;
+    color:#000;
+    background-color: #f2f1ee;
+    display: inline-block;
+    width: 50%;
+}
+
+.librivoxSearchHeader {
+    font-weight: normal;
+    line-height: 1em;
+    margin-bottom: 15px;    	
+    font-size: 1.375em; 
+}
+
+.book-data {
+	  font-size: 0.8125em; /* 13/16 */ 
+	  margin-bottom: 7px;
+    display: inline-block;
+    width: 50%;
+}
