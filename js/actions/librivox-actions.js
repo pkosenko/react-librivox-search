@@ -15,10 +15,6 @@
 
  import jsonp from 'jsonp';
 
-// TEST data for no internet connection;  fetch() of json file is not working; two titles only; needs to end }]}]};
-var data = {books:[{"id":"53","title":"Bleak House","description":"<p>Bleak House is the ninth novel by Charles Dickens, published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens' finest and most complete novels, containing one of the most vast, complex and engaging arrays of minor characters and sub-plots in his entire canon. Dickens tells all of these both through the narrative of the novel's heroine, Esther Summerson, and as an omniscient narrator. Memorable characters include the menacing lawyer Tulkinghorn, the friendly but depressive John Jarndyce and the childish Harold Skimpole. The plot concerns a long-running legal dispute (Jarndyce and Jarndyce) which has far-reaching consequences for all involved. (Summary from Wikipedia)<\/p>","url_text_source":"http:\/\/www.gutenberg.org\/etext\/1023","language":"English","copyright_year":"1853","num_sections":"67","url_rss":"http:\/\/librivox.org\/rss\/53","url_zip_file":"http:\/\/www.archive.org\/download\/bleak_house_cl_librivox\/bleak_house_cl_librivox_64kb_mp3.zip","url_project":"http:\/\/en.wikipedia.org\/wiki\/Bleak_House","url_librivox":"http:\/\/librivox.org\/bleak-house-by-charles-dickens\/","url_other":null,"totaltime":"43:30:19","totaltimesecs":156619,"authors":[{"id":"91","first_name":"Charles","last_name":"Dickens","dob":"1812","dod":"1870"}]},
-{"id":"140","title":"Christmas Carol","description":"<p>A classic tale of what comes to those whose hearts are hard. In a series of ghostly visits, Scrooge visits his happy past, sees the difficulties of the present, views a bleak future, and in the end amends his mean ways. (Summary written by Kristen McQuillin)<p>","url_text_source":"http:\/\/www.gutenberg.org\/etext\/46","language":"English","copyright_year":"1843","num_sections":"5","url_rss":"http:\/\/librivox.org\/rss\/140","url_zip_file":"http:\/\/www.archive.org\/download\/A_Christmas_Carol\/A_Christmas_Carol_64kb_mp3.zip","url_project":"http:\/\/en.wikipedia.org\/wiki\/A_Christmas_Carol","url_librivox":"http:\/\/librivox.org\/a-christmas-carol-by-charles-dickens\/","url_other":null,"totaltime":"3:14:29","totaltimesecs":11669,"authors":[{"id":"91","first_name":"Charles","last_name":"Dickens","dob":"1812","dod":"1870"}]}]};
-
 
  //  previous action type constants
  //  SAVE_LIBRIVOX_DATA   // ????
@@ -49,8 +45,6 @@ export const BOOK_TITLE_FILTER = 'BOOK_TITLE_FILTER';
 export const GET_BOOK = 'GET_BOOK'; 
 // Save the Search URL in case needed for orepeat search, or just for information
 export const SAVE_SEARCHURL = 'SAVE_SEARCHURL';
-// save the current selected book data
-export const SAVE_CURRENT_BOOK = 'SAVE_CURRENT_BOOK';
 
 // Librivox API gives "404 Not Found" if no data is returned for 
 // an author name. That is incorrect use of the 
@@ -58,15 +52,6 @@ export const SAVE_CURRENT_BOOK = 'SAVE_CURRENT_BOOK';
 // If searchTerm is left blank, the API returns fifty items, 
 // starting with the beginning of the librivox list.  Not 
 // especially useful . . . so just cancel the search?
-
-// Save the current book object to stores
-export function saveCurrentBook(currentBook = {}) {
-     console.log('Current Book Action: ' + currentBook);
-     return {
-     	type: SAVE_CURRENT_BOOK,
-     	currentBook: currentBook
-     }
-}
     
 export function saveSearchURL(searchURL) {
 	// console.log('searchURL action engaged.')
@@ -85,18 +70,12 @@ export function getBookData (searchType = 'author/', searchTerm) {
     }
     // Local testing -- JSONP will not properly load a .json file; try using built-in react fetch() method
     // see "react/node_modules/fbjs/node_modules/whatwg-fetch/README.md"
-    /*
-		fetch('/users.json')
-  			.then(function(response) {
-    		return response.json()
-  		}).then(function(json) {
-    		console.log('parsed json', json)
-  		}).catch(function(ex) {
-    		console.log('parsing failed', ex)
-  		})
-    */
+    // var searchURL = 'http://jstest.dd:8083/react_librivox_search/books3.json?callback=CALLBACK';  // Local testing
+    // http://jstest.dd:8083/react_librivox_search/books.json?callback=__jp0
+    // Can't figure out why this will not parse.  SyntaxError: missing ; before statement book:  (at the semicolon?)
+    // bundle.js (line 21270)  SyntaxError: missing ; before statement
 
-    // Production code:
+    // Production codee:
     var searchURL = 'https://librivox.org/api/feed/audiobooks/';  // actual API   
     var searchType = 'author/';  // author last name
     var queryFormat = '?format=jsonp';
@@ -108,27 +87,6 @@ export function getBookData (searchType = 'author/', searchTerm) {
     // searchURL should be stored in the store by now???
     // jsonp(url, opts, fn){
     return (dispatch) => {
-    	// For use with missing internet connection
-    	/* fetch() DOES NOT WORK on books.json file
-    	fetch('/react_librivox_search/books.json')
-  		.then(function(response) {
-  			// HUH? SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
-  			dispatch(saveBookData(response.books));
-  			dispatch(saveSearchURL(searchURL));
-    		return response.json()
-  		}).then(function(json) {
-    		console.log('parsed json', json)
-  		}).catch(function(ex) {
-    		console.log('parsing failed', ex);
-    		dispatch(saveBookDataFetchError(ex)); 
-  		});
-  		*/
-
-  		// TEST data -- variable defined above -- comment out fetch() and jsonp()
-  		dispatch(saveBookData(data.books));  // data is an object, books is an array
-	    dispatch(saveSearchURL(searchURL));
-
-  		/*
     	jsonp(searchURL, {}, function (err, data) {
 	        if (data) {
 	            // console.log('data: ' + JSON.stringify(data)); 
@@ -147,7 +105,6 @@ export function getBookData (searchType = 'author/', searchTerm) {
 	            dispatch(saveBookDataFetchError(err));    
 	        }
     	});
-		*/
     }
 }
 

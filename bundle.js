@@ -105,7 +105,6 @@
 	  displayName: 'SearchFilter',
 
 
-	  // Not used YET
 	  // createClass vs Class constructor
 
 	  getInitialState: function getInitialState() {
@@ -150,18 +149,8 @@
 	  },
 	  */
 	  propTypes: {
-	    data: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object),
-	    currentBook: _react2.default.PropTypes.object, // undefined? was object, now try string to pass
-	    params: _react2.default.PropTypes.object
+	    data: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object) // grabs the data
 	  },
-	  getDefaultProps: function getDefaultProps() {
-	    return {
-	      data: [],
-	      currentBook: {},
-	      params: {}
-	    };
-	  },
-
 	  /*
 	  contextTypes: {
 	    router: React.PropTypes.func
@@ -174,44 +163,27 @@
 	  Warning: Failed Context Types: Invalid context `router` of type `object` supplied to `BookDataDisplay`, expected `function`. Check the render method of `App`.
 	  */
 	  getInitialState: function getInitialState() {
-	    // this.context.redux.getState();
 	    return { authors: "" };
 	  },
 	  componentWillMount: function componentWillMount() {
-	    // librivoxStore.getState();  // causes app to hang!!!
-	    // this.props.currentBook = this.props.params.currentBook; // can't be assigned (read-only)
+	    // get book data from stores.  Initial state of this.props is {}
+	    // this.props.data = librivoxStore.getState();
+	    console.log('BookDataDisplay PROPS: ' + JSON.stringify(this.props));
+	    // console.log("this.getParams().id: " + this.getParams().id);
+	    // this.context.store.getState(); // this is going to be the whole store!!!  But all we want is the ONE
+	    // BOOK to display
+	    // console.log('BookDataDisplay from stores: ' + JSON.stringify(this.context.store)); // doesn't work
+	    // console.log('params.id: ' + this.props.params.id);  // params undefined causes whole app blank out
+	    // assemble the composite author string from retrieved book data
 	  },
-	  componentWillReceiveProps: function componentWillReceiveProps() {
-	    // Presumably WHENEVER PROPS are being updated
-	    // this.context.redux.getState();  // undefined (stackoverflow post is wrong)
-	    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.bookObject));   // is this causing hang?
-	    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.currentBook));  // I have no idea why here  NO
-	  },
-	  /*
-	  Error: Objects are not valid as a React child (found: object with keys {}). If you meant to render a collection of 
-	  children, use an array instead or wrap the object using createFragment(object) from the React add-ons. Check the render 
-	  method of `BookDataDisplay`.
-	  */
 	  render: function render() {
-	    // Needs to use React routing.
-	    // Display should be based on ID of the book.  If no id is passed in the URL
-	    // parameters, the link has not been clicked, and the element should not be displayed
-	    console.log("PROPS in BookDataDisplay: " + JSON.stringify(this.props)); // {}
-	    /*
-	    if (this.props.params == undefined) {
-	      return null;
-	    }
-	    */
-	    // this.forceUpdate().
-
 	    return _react2.default.createElement(
 	      'div',
 	      { className: 'book-data' },
 	      _react2.default.createElement(
 	        'p',
 	        null,
-	        'BOOK ID: ',
-	        this.props.currentBook.id
+	        'BOOK ID: '
 	      ),
 	      _react2.default.createElement(
 	        'p',
@@ -222,20 +194,11 @@
 	      _react2.default.createElement(
 	        'p',
 	        null,
-	        'Title: ',
-	        this.props.currentBook.title
-	      ),
-	      _react2.default.createElement(
-	        'p',
-	        null,
-	        'this.context.router: ',
-	        JSON.stringify(this.context.router)
+	        'Title: '
 	      )
 	    );
 	  }
 	});
-
-	_librivoxStore2.default.subscribe(BookDataDisplay);
 
 	var SearchResultsDisplay = _react2.default.createClass({
 	  displayName: 'SearchResultsDisplay',
@@ -372,19 +335,8 @@
 	    }
 	  },
 	  */
-	  componentWillMount: function componentWillMount() {
-	    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.bookObject));   // is this causing hang?
-	  },
-	  handleClick: function handleClick(bookObject) {
-	    // alert('Item Clicked'); // works
-	    // Save current book to stores  this.saveCurrentBook and saveCurrentBook do not work (not really "mapped")
-	    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(bookObject));  // causes loop
-	    // preventDefault();  // what is the oevent reference to prevent default? for OnClick()
-	    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(bookObject));   // is this causing hang?
-	  },
-	  componentDidMount: function componentDidMount() {
-	    // Presumably WHENEVER PROPS are being updated
-	    // this.context.redux.getState();  // undefined (stackoverflow post is wrong)
+	  handleClick: function handleClick() {
+	    alert('Item Clicked');
 	  },
 	  // "params={{ id: bookObject.id}}"" in LINK does NOT pass parameters
 	  // how to set an action on LINK?
@@ -416,7 +368,7 @@
 	        null,
 	        _react2.default.createElement(
 	          _reactRouter.Link,
-	          { to: "/book/" + bookObject.id, params: { currentBook: bookObject }, onClick: this.handleClick(bookObject) },
+	          { to: "/book/" + bookObject.id, onClick: this.handleClick },
 	          'DISPLAY FULL BOOK DATA'
 	        )
 	      ),
@@ -425,17 +377,11 @@
 	        null,
 	        '************************'
 	      )
-	    );
+	    ); // .bind(this);  // to bind events to the item instance  // doesn't work blank results
+	    // http://stackoverflow.com/questions/21010400/how-to-set-event-handler-in-react-sub-component
 	  }
 	});
 
-	/* No effect (probably alread set):
-
-	Link.propTypes = {
-	  params: React.PropTypes.object.isRequired
-	}
-
-	*/
 	/*   
 
 	Notice that the data always returns a maximum of 50 records. That is the default.  Also, returns all last names, so that requires a separate first name
@@ -474,24 +420,21 @@
 	  // Setting proptypes for data on wrapper class doesn't per se solve the problem of missing search list data.
 	  // You also have to pass down the properties to child components in the component tag.
 	  propTypes: {
-	    data: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object),
-	    currentBook: _react2.default.PropTypes.object // note that BookDataDisplay is a child of App, but not of Search and its children
+	    data: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object)
 	  },
 	  getDefaultProps: function getDefaultProps() {
 	    return {
-	      data: [] // ,
-	      // currentBook: {}   // but beware that you can't pass object as property!?  So how?
+	      data: []
 	    };
 	  },
 
-	  // We can pass the whole data array, but why not just the specific book data?
-	  // but how does BookDataDisplay pick up params?
+	  // We can pass the whole data array, but how doesn BookDataDisplay pick up params?
 	  render: function render() {
 	    return _react2.default.createElement(
 	      'div',
 	      null,
 	      _react2.default.createElement(Search, { data: this.props.data }),
-	      _react2.default.createElement(BookDataDisplay, { currentBook: this.props.currentBook /* data={this.props.data} currentBook={this.props.currentBook} */ })
+	      _react2.default.createElement(BookDataDisplay, { data: this.props.data })
 	    );
 	  }
 	});
@@ -594,13 +537,10 @@
 	  // I don't GET how this function knows that stores bookData is already in state (is it?)
 	  // console.log("state in mapStateToProps: " + JSON.stringify(state)); // state
 	  // console.log("mapStateToProps args: " + arguments[0]); // okay
-	  // console.log("data:state.bookData.data: " + state.bookData.data);  // Object object  Object object  (array of objects?)
+	  console.log("data:state.bookData.data: " + state.bookData.data);
 	  // I would think that this should be PUTTING bookData into props
 	  // This component will have access to `appstate.heroes` through `this.props.heroes`
-	  return {
-	    data: state.bookData.data,
-	    currentBook: state.currentBook
-	  }; // Not sure what the prop and state data structure is going to be
+	  return { data: state.bookData.data }; // Not sure what the prop and state data structure is going to be
 	};
 
 	// Maps the dispatch actions to the top level of props (makes available as top prop methods if needed).
@@ -618,9 +558,6 @@
 	    },
 	    saveBookDataFetchError: function saveBookDataFetchError(err) {
 	      dispatch(librivoxActions.saveBookDataFetchError(err));
-	    },
-	    saveCurrentBook: function saveCurrentBook(currentBook) {
-	      dispatch(librivoxActions.saveCurrentBook(currentBook));
 	    }
 	  };
 	};
@@ -659,56 +596,16 @@
 	// returns the error:   TypeError: _history2.default is not a function
 
 	// LOOKS to me like it is configuring the history object with a basename property so that React can use it?
-	// But how does this integrate with browserHistory
 
-	// const history = useRouterHistory(createHistory)({basename: '/react_librivox_search/'});
-
-	// console.log(JSON.stringify("history before: " + history));  // undefined
-
-	// WTF is this doing?  Where is the fucking "basename" being stored (not in history)
 	var history = (0, _reactRouter.useRouterHistory)(_history.createHistory)({
 	  basename: '/react_librivox_search/'
 	});
-
-	//alert(Object.keys(history));  So where is the basename?
-	/* listenBefore,
-	   listen,
-	   transitionTo,
-	   push,
-	   replace,
-	   go,
-	   goBack,
-	   goForward,
-	   createKey,
-	   createPath,
-	   createHref,
-	   createLocation,
-	   setState,
-	   registerTransitionHook,
-	   unregisterTransitionHook,
-	   pushState,
-	   replaceState,
-	   __v2_compatible__
-	   */
-	// alert("createLocation: " + JSON.stringify(history.createLocation)); // createPath undefined, createLocation undefined
-	// alert("basename: " + history.basename);  // undefined???
-	// alert(Object.keys(window.history.basename));
-	// alert(window.history.basename); // undefined
-
-	/* doesn't work either.  Below is till calling createHistory() rather than createBrowserHistory() in one of the 
-	module dependencies.
-
-	const browserHistory = useBasename(createBrowserHistory)({
-	  basename: '/react_librivox_search/'
-	});
-	*/
 
 	// To get a correctly nested app with right and left columns, I will probably have to refactor the current app2
 	// into a search component in a left column, with book list below it, then individual book display in the right
 	// column.
 
 	// what is the difference between component and handler?
-	// BookDataDisplay is not a child of Search, but parallel?  It should be a child of App2.
 
 	_reactDom2.default.render(_react2.default.createElement(
 	  _reactRedux.Provider,
@@ -732,7 +629,7 @@
 	New state: {"data":[{"id":"53","title":"Bleak House","description":"<p>Bleak House is the ninth novel by Charles Dickens, 
 	published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens'
 	*/
-	/*  COPIED OUT STUFF
+	/*  COPY OUT STUFF
 
 	*/
 
@@ -20360,8 +20257,7 @@
 	var initialState = {
 	  searchURL: { searchURL: "https://www.librivox.org", isFetching: false },
 	  titleFilter: "",
-	  bookData: { data: [], lastUpdated: null },
-	  currentBook: {}
+	  bookData: { data: [], lastUpdated: null }
 	};
 
 	// let storeDefault = null;  // turns state completely null and nothing displays
@@ -21301,23 +21197,10 @@
 	var rootLibrivoxReducer = (0, _redux.combineReducers)({
 	  searchURL: searchURL,
 	  titleFilter: titleFilter,
-	  bookData: bookData, // the entire return JSON from librivox search
-	  currentBook: currentBook // The individual book displayed in BookDataDisplay
+	  bookData: bookData // the entire return JSON from librivox search
+	  // currentBook  // The individual book displayed in BookDataDisplay
 	});
 
-	function currentBook() {
-	  var state = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	  var action = arguments[1];
-
-	  console.log('reducer currentBook was called with state', state, 'and action', action);
-	  switch (action.type) {
-	    case librivoxActions.SAVE_CURRENT_BOOK:
-	      return _extends({}, state, { currentBook: action.saveCurrentBook
-	      });
-	    default:
-	      return state;
-	  }
-	}
 	// This reducer saves the current search URL to the store
 	// The action itself calls the JSONP, which needs another action to wait on the return of data?
 	// Note that if you define initial state in createStore(), it overrides state default defined in
@@ -21383,13 +21266,12 @@
 /* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.SAVE_CURRENT_BOOK = exports.SAVE_SEARCHURL = exports.GET_BOOK = exports.BOOK_TITLE_FILTER = exports.BOOK_DATA_FETCH_ERROR = exports.RECEIVED_BOOKS_SUCCESS = exports.REQUEST_BOOKS = undefined;
-	exports.saveCurrentBook = saveCurrentBook;
+	exports.SAVE_SEARCHURL = exports.GET_BOOK = exports.BOOK_TITLE_FILTER = exports.BOOK_DATA_FETCH_ERROR = exports.RECEIVED_BOOKS_SUCCESS = exports.REQUEST_BOOKS = undefined;
 	exports.saveSearchURL = saveSearchURL;
 	exports.getBookData = getBookData;
 	exports.saveBookData = saveBookData;
@@ -21400,9 +21282,6 @@
 	var _jsonp2 = _interopRequireDefault(_jsonp);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	// TEST data for no internet connection;  fetch() of json file is not working; two titles only; needs to end }]}]};
-	var data = { books: [{ "id": "53", "title": "Bleak House", "description": "<p>Bleak House is the ninth novel by Charles Dickens, published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens' finest and most complete novels, containing one of the most vast, complex and engaging arrays of minor characters and sub-plots in his entire canon. Dickens tells all of these both through the narrative of the novel's heroine, Esther Summerson, and as an omniscient narrator. Memorable characters include the menacing lawyer Tulkinghorn, the friendly but depressive John Jarndyce and the childish Harold Skimpole. The plot concerns a long-running legal dispute (Jarndyce and Jarndyce) which has far-reaching consequences for all involved. (Summary from Wikipedia)<\/p>", "url_text_source": "http:\/\/www.gutenberg.org\/etext\/1023", "language": "English", "copyright_year": "1853", "num_sections": "67", "url_rss": "http:\/\/librivox.org\/rss\/53", "url_zip_file": "http:\/\/www.archive.org\/download\/bleak_house_cl_librivox\/bleak_house_cl_librivox_64kb_mp3.zip", "url_project": "http:\/\/en.wikipedia.org\/wiki\/Bleak_House", "url_librivox": "http:\/\/librivox.org\/bleak-house-by-charles-dickens\/", "url_other": null, "totaltime": "43:30:19", "totaltimesecs": 156619, "authors": [{ "id": "91", "first_name": "Charles", "last_name": "Dickens", "dob": "1812", "dod": "1870" }] }, { "id": "140", "title": "Christmas Carol", "description": "<p>A classic tale of what comes to those whose hearts are hard. In a series of ghostly visits, Scrooge visits his happy past, sees the difficulties of the present, views a bleak future, and in the end amends his mean ways. (Summary written by Kristen McQuillin)<p>", "url_text_source": "http:\/\/www.gutenberg.org\/etext\/46", "language": "English", "copyright_year": "1843", "num_sections": "5", "url_rss": "http:\/\/librivox.org\/rss\/140", "url_zip_file": "http:\/\/www.archive.org\/download\/A_Christmas_Carol\/A_Christmas_Carol_64kb_mp3.zip", "url_project": "http:\/\/en.wikipedia.org\/wiki\/A_Christmas_Carol", "url_librivox": "http:\/\/librivox.org\/a-christmas-carol-by-charles-dickens\/", "url_other": null, "totaltime": "3:14:29", "totaltimesecs": 11669, "authors": [{ "id": "91", "first_name": "Charles", "last_name": "Dickens", "dob": "1812", "dod": "1870" }] }] };
 
 	//  previous action type constants
 	//  SAVE_LIBRIVOX_DATA   // ????
@@ -21417,6 +21296,11 @@
 	// An action informing the reducers that the request began.
 	// The reducers may handle this action by toggling an isFetching flag in the
 	// state.  This way the UI knows it’s time to show a spinner.
+	var REQUEST_BOOKS = exports.REQUEST_BOOKS = 'REQUEST_BOOKS'; // start jsonp
+	// An action informing the reducers that the request finished successfully.
+	// The reducers may handle this action by merging the new data into the state
+	// they manage and resetting isFetching (global?). The UI would hide the
+	// spinner, and display the fetched data.
 	/*
 	 * Copyright (c) 2014-2015, Facebook, Inc.
 	 * All rights reserved.
@@ -21432,11 +21316,6 @@
 	 *
 	 */
 
-	var REQUEST_BOOKS = exports.REQUEST_BOOKS = 'REQUEST_BOOKS'; // start jsonp
-	// An action informing the reducers that the request finished successfully.
-	// The reducers may handle this action by merging the new data into the state
-	// they manage and resetting isFetching (global?). The UI would hide the
-	// spinner, and display the fetched data.
 	var RECEIVED_BOOKS_SUCCESS = exports.RECEIVED_BOOKS_SUCCESS = 'RECEIVED_BOOKS_SUCCESS';
 	// jsonp succeeded
 	var BOOK_DATA_FETCH_ERROR = exports.BOOK_DATA_FETCH_ERROR = 'BOOK_DATA_FETCH_ERROR'; // jsonp failed
@@ -21447,8 +21326,6 @@
 	var GET_BOOK = exports.GET_BOOK = 'GET_BOOK';
 	// Save the Search URL in case needed for orepeat search, or just for information
 	var SAVE_SEARCHURL = exports.SAVE_SEARCHURL = 'SAVE_SEARCHURL';
-	// save the current selected book data
-	var SAVE_CURRENT_BOOK = exports.SAVE_CURRENT_BOOK = 'SAVE_CURRENT_BOOK';
 
 	// Librivox API gives "404 Not Found" if no data is returned for
 	// an author name. That is incorrect use of the
@@ -21456,17 +21333,6 @@
 	// If searchTerm is left blank, the API returns fifty items,
 	// starting with the beginning of the librivox list.  Not
 	// especially useful . . . so just cancel the search?
-
-	// Save the current book object to stores
-	function saveCurrentBook() {
-	  var currentBook = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-	  console.log('Current Book Action: ' + currentBook);
-	  return {
-	    type: SAVE_CURRENT_BOOK,
-	    currentBook: currentBook
-	  };
-	}
 
 	function saveSearchURL(searchURL) {
 	  // console.log('searchURL action engaged.')
@@ -21488,18 +21354,12 @@
 
 	  // Local testing -- JSONP will not properly load a .json file; try using built-in react fetch() method
 	  // see "react/node_modules/fbjs/node_modules/whatwg-fetch/README.md"
-	  /*
-	  fetch('/users.json')
-	  	.then(function(response) {
-	  		return response.json()
-	  }).then(function(json) {
-	  		console.log('parsed json', json)
-	  }).catch(function(ex) {
-	  		console.log('parsing failed', ex)
-	  })
-	  */
+	  // var searchURL = 'http://jstest.dd:8083/react_librivox_search/books3.json?callback=CALLBACK';  // Local testing
+	  // http://jstest.dd:8083/react_librivox_search/books.json?callback=__jp0
+	  // Can't figure out why this will not parse.  SyntaxError: missing ; before statement book:  (at the semicolon?)
+	  // bundle.js (line 21270)  SyntaxError: missing ; before statement
 
-	  // Production code:
+	  // Production codee:
 	  var searchURL = 'https://librivox.org/api/feed/audiobooks/'; // actual API  
 	  var searchType = 'author/'; // author last name
 	  var queryFormat = '?format=jsonp';
@@ -21510,46 +21370,24 @@
 	  // searchURL should be stored in the store by now???
 	  // jsonp(url, opts, fn){
 	  return function (dispatch) {
-	    // For use with missing internet connection
-	    /* fetch() DOES NOT WORK on books.json file
-	    fetch('/react_librivox_search/books.json')
-	    .then(function(response) {
-	    // HUH? SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
-	    dispatch(saveBookData(response.books));
-	    dispatch(saveSearchURL(searchURL));
-	    	return response.json()
-	    }).then(function(json) {
-	    	console.log('parsed json', json)
-	    }).catch(function(ex) {
-	    	console.log('parsing failed', ex);
-	    	dispatch(saveBookDataFetchError(ex)); 
+	    (0, _jsonp2.default)(searchURL, {}, function (err, data) {
+	      if (data) {
+	        // console.log('data: ' + JSON.stringify(data));
+	        // Dispatch the data to stores
+	        // sdata => dispatch({ type: 'RECEIVED_BOOKS_SUCCESS', data }),
+	        dispatch(saveBookData(data.books)); // data is an object, books is an array
+	        // dispatch({ type: 'RECEIVED_BOOKS_SUCCESS', data }),
+	        // data is the object
+	        // librivoxActions.saveLibrivoxData(data); 
+	        dispatch(saveSearchURL(searchURL));
+	      }
+	      if (err) {
+	        console.log('err: ' + err);
+	        // err => dispatch({ type: 'LOAD_DATA_FAILURE', err })
+	        // BOOK_DATA_FETCH_ERROR
+	        dispatch(saveBookDataFetchError(err));
+	      }
 	    });
-	    */
-
-	    // TEST data -- variable defined above -- comment out fetch() and jsonp()
-	    dispatch(saveBookData(data.books)); // data is an object, books is an array
-	    dispatch(saveSearchURL(searchURL));
-
-	    /*
-	    	jsonp(searchURL, {}, function (err, data) {
-	         if (data) {
-	             // console.log('data: ' + JSON.stringify(data)); 
-	             // Dispatch the data to stores
-	             // sdata => dispatch({ type: 'RECEIVED_BOOKS_SUCCESS', data }),
-	             dispatch(saveBookData(data.books));  // data is an object, books is an array
-	             // dispatch({ type: 'RECEIVED_BOOKS_SUCCESS', data }),
-	             // data is the object
-	             // librivoxActions.saveLibrivoxData(data);  
-	             dispatch(saveSearchURL(searchURL));
-	         } 
-	         if (err) {
-	             console.log('err: ' + err);
-	             // err => dispatch({ type: 'LOAD_DATA_FAILURE', err })
-	             // BOOK_DATA_FETCH_ERROR
-	             dispatch(saveBookDataFetchError(err));    
-	         }
-	    	});
-	    */
 	  };
 	}
 

@@ -4,7 +4,7 @@ import React from 'react';
 import librivoxStore from './js/stores/librivox-store';
 import * as librivoxActions from './js/actions/librivox-actions';  // This is not importing correctly?
 import ReactDOM from 'react-dom';  // Why not directly from React?
-import { Router, Route, Link, /* browserHistory, */ IndexRoute } from 'react-router';  // unless we plan on using redux-react-router
+import { Router, Route, Link, browserHistory, IndexRoute } from 'react-router';  // unless we plan on using redux-react-router
 import { Provider, connect } from 'react-redux';
 import { useRouterHistory } from 'react-router'
 import { createHistory } from 'history'
@@ -39,7 +39,6 @@ import { createHistory } from 'history'
 
 var SearchFilter = React.createClass({
 
-  // Not used YET
   // createClass vs Class constructor
 
   getInitialState: function() {
@@ -76,18 +75,8 @@ var BookDataDisplay = React.createClass({
     },
     */
     propTypes: {
-      data: React.PropTypes.arrayOf(React.PropTypes.object),
-      currentBook: React.PropTypes.object,  // undefined? was object, now try string to pass
-      params: React.PropTypes.object
+      data: React.PropTypes.arrayOf(React.PropTypes.object)  // grabs the data
     },
-    getDefaultProps: function() {
-      return {
-        data: [],
-        currentBook: {},
-        params: {}
-      }
-    },
-
     /*
     contextTypes: {
       router: React.PropTypes.func
@@ -100,48 +89,38 @@ bundle.js (line 2734)
 Warning: Failed Context Types: Invalid context `router` of type `object` supplied to `BookDataDisplay`, expected `function`. Check the render method of `App`.
     */
     getInitialState: function() {
-      // this.context.redux.getState();
       return {authors: ""};
     },
-    componentWillMount: function() {
-      // librivoxStore.getState();  // causes app to hang!!!
-      // this.props.currentBook = this.props.params.currentBook; // can't be assigned (read-only)
+    componentWillMount : function() {
+      // get book data from stores.  Initial state of this.props is {}
+      // this.props.data = librivoxStore.getState();
+      console.log('BookDataDisplay PROPS: ' + JSON.stringify(this.props));
+      // console.log("this.getParams().id: " + this.getParams().id);
+      // this.context.store.getState(); // this is going to be the whole store!!!  But all we want is the ONE
+      // BOOK to display
+      // console.log('BookDataDisplay from stores: ' + JSON.stringify(this.context.store)); // doesn't work
+      // console.log('params.id: ' + this.props.params.id);  // params undefined causes whole app blank out
+      // assemble the composite author string from retrieved book data
     },
-    componentWillReceiveProps: function() {
-      // Presumably WHENEVER PROPS are being updated
-      // this.context.redux.getState();  // undefined (stackoverflow post is wrong)
-      // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.bookObject));   // is this causing hang?
-      // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.currentBook));  // I have no idea why here  NO
-    },
-    /*
-    Error: Objects are not valid as a React child (found: object with keys {}). If you meant to render a collection of 
-    children, use an array instead or wrap the object using createFragment(object) from the React add-ons. Check the render 
-    method of `BookDataDisplay`.
-    */
     render: function() {
         // Needs to use React routing.
         // Display should be based on ID of the book.  If no id is passed in the URL
         // parameters, the link has not been clicked, and the element should not be displayed
-        console.log("PROPS in BookDataDisplay: " + JSON.stringify(this.props));   // {}
         /*
         if (this.props.params == undefined) {
           return null;
         }
         */
-        // this.forceUpdate().
-
         return (
            <div className='book-data'>
-               <p>BOOK ID: { this.props.currentBook.id }</p>
+               <p>BOOK ID: {}</p>
                <p>AUTHOR(S): {this.state.authors}</p>
-               <p>Title: { this.props.currentBook.title }</p>
-               <p>this.context.router: {JSON.stringify(this.context.router)}</p>
+               <p>Title: {}</p>
            </div>
         );
     }
 });
 
-// librivoxStore.subscribe(BookDataDisplay);  // doesn't subscribe -- "use jsx or factory"
 
 var SearchResultsDisplay = React.createClass({
     // book data is now grabbed from librivoxStore module
@@ -250,19 +229,8 @@ var BookListItem = React.createClass ({
     }
   },
   */
-  componentWillMount: function() {
-    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(this.props.bookObject));   // is this causing hang?
-  },
-  handleClick: function (bookObject) {
-    // alert('Item Clicked'); // works
-    // Save current book to stores  this.saveCurrentBook and saveCurrentBook do not work (not really "mapped")
-    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(bookObject));  // causes loop 
-    // preventDefault();  // what is the oevent reference to prevent default? for OnClick()
-    // librivoxStore.dispatch(librivoxActions.saveCurrentBook(bookObject));   // is this causing hang?
-  },
-  componentDidMount: function() {
-      // Presumably WHENEVER PROPS are being updated
-      // this.context.redux.getState();  // undefined (stackoverflow post is wrong)
+  handleClick: function () {
+    alert('Item Clicked');
   },
   // "params={{ id: bookObject.id}}"" in LINK does NOT pass parameters
   // how to set an action on LINK?
@@ -273,20 +241,13 @@ var BookListItem = React.createClass ({
         <p>BOOK ID: {bookObject.id}</p>
         <p>AUTHOR(S): {bookObject.authors[0].first_name + ' '  + bookObject.authors[0].last_name}</p> 
         <p>TITLE: {bookObject.title}</p>
-        <p><Link to={"/book/" + bookObject.id} params={{currentBook: bookObject }} onClick={this.handleClick(bookObject)}>DISPLAY FULL BOOK DATA</Link></p>
+        <p><Link to={"/book/" + bookObject.id}  onClick={this.handleClick}>DISPLAY FULL BOOK DATA</Link></p>
         <p>************************</p>
       </div>   
     )  
   }
 });
 
-/* No effect (probably alread set):
-
-Link.propTypes = {
-  params: React.PropTypes.object.isRequired
-}
-
-*/
 /*   
 
 Notice that the data always returns a maximum of 50 records. That is the default.  Also, returns all last names, so that requires a separate first name
@@ -323,23 +284,20 @@ var App = React.createClass({
     // Setting proptypes for data on wrapper class doesn't per se solve the problem of missing search list data.
     // You also have to pass down the properties to child components in the component tag.
     propTypes: {
-      data: React.PropTypes.arrayOf(React.PropTypes.object),
-      currentBook: React.PropTypes.object  // note that BookDataDisplay is a child of App, but not of Search and its children
+      data: React.PropTypes.arrayOf(React.PropTypes.object)
     },
     getDefaultProps: function() {
       return {
-        data: [] // ,
-        // currentBook: {}   // but beware that you can't pass object as property!?  So how?
+        data: []
     }
   },
 
-  // We can pass the whole data array, but why not just the specific book data?
-  // but how does BookDataDisplay pick up params?
+  // We can pass the whole data array, but how doesn BookDataDisplay pick up params?
   render: function() {
     return ( 
       <div>
-        <Search data={this.props.data}/>
-        <BookDataDisplay currentBook={this.props.currentBook} /* data={this.props.data} currentBook={this.props.currentBook} *//>
+        <Search data={this.props.data} />
+        <BookDataDisplay data={this.props.data}/>
       </div>    
     )
   }
@@ -419,13 +377,10 @@ var mapStateToProps = function(state){
     // I don't GET how this function knows that stores bookData is already in state (is it?)
     // console.log("state in mapStateToProps: " + JSON.stringify(state)); // state
     // console.log("mapStateToProps args: " + arguments[0]); // okay
-   // console.log("data:state.bookData.data: " + state.bookData.data);  // Object object  Object object  (array of objects?)
+   console.log("data:state.bookData.data: " + state.bookData.data);
     // I would think that this should be PUTTING bookData into props
     // This component will have access to `appstate.heroes` through `this.props.heroes`
-    return {
-      data: state.bookData.data, 
-      currentBook: state.currentBook
-    };  // Not sure what the prop and state data structure is going to be
+    return {data: state.bookData.data};  // Not sure what the prop and state data structure is going to be
 };
 
 // Maps the dispatch actions to the top level of props (makes available as top prop methods if needed).
@@ -435,8 +390,7 @@ var mapDispatchToProps = function(dispatch){
         saveSearchURL: function(searchURL){ dispatch(librivoxActions.saveSearchURL(searchURL)); },
         getBookData: function(searchType, searchTerm){ dispatch(librivoxActions.getBookdata(searchType, searchTerm)); },
         saveBookData: function(data){ dispatch(librivoxActions.saveBookData(data)); },
-        saveBookDataFetchError: function(err){ dispatch(librivoxActions.saveBookDataFetchError(err)); },
-        saveCurrentBook: function(currentBook){ dispatch(librivoxActions.saveCurrentBook(currentBook)); }
+        saveBookDataFetchError: function(err){ dispatch(librivoxActions.saveBookDataFetchError(err)); }
     }
 };  
 
@@ -474,56 +428,16 @@ const history = syncHistoryWithStore(browserHistory, librivoxStore)
 // returns the error:   TypeError: _history2.default is not a function
 
 // LOOKS to me like it is configuring the history object with a basename property so that React can use it?
-// But how does this integrate with browserHistory
 
-// const history = useRouterHistory(createHistory)({basename: '/react_librivox_search/'});
-
-// console.log(JSON.stringify("history before: " + history));  // undefined
-
-// WTF is this doing?  Where is the fucking "basename" being stored (not in history)
 const history = useRouterHistory(createHistory)({
   basename: '/react_librivox_search/'
 });
-
-//alert(Object.keys(history));  So where is the basename?
-/* listenBefore,
-   listen,
-   transitionTo,
-   push,
-   replace,
-   go,
-   goBack,
-   goForward,
-   createKey,
-   createPath,
-   createHref,
-   createLocation,
-   setState,
-   registerTransitionHook,
-   unregisterTransitionHook,
-   pushState,
-   replaceState,
-   __v2_compatible__
-   */
-   // alert("createLocation: " + JSON.stringify(history.createLocation)); // createPath undefined, createLocation undefined
-   // alert("basename: " + history.basename);  // undefined???
-   // alert(Object.keys(window.history.basename));
-   // alert(window.history.basename); // undefined
-
-/* doesn't work either.  Below is till calling createHistory() rather than createBrowserHistory() in one of the 
-module dependencies.
-
-const browserHistory = useBasename(createBrowserHistory)({
-  basename: '/react_librivox_search/'
-});
-*/
 
 // To get a correctly nested app with right and left columns, I will probably have to refactor the current app2
 // into a search component in a left column, with book list below it, then individual book display in the right
 // column.
 
 // what is the difference between component and handler?
-// BookDataDisplay is not a child of Search, but parallel?  It should be a child of App2.
 
 ReactDOM.render(
   <Provider store={librivoxStore}>
@@ -543,6 +457,6 @@ ReactDOM.render(
 New state: {"data":[{"id":"53","title":"Bleak House","description":"<p>Bleak House is the ninth novel by Charles Dickens, 
 published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens'
 */
-/*  COPIED OUT STUFF
+/*  COPY OUT STUFF
 
 */

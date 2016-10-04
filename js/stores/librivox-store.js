@@ -49,8 +49,7 @@ import thunk from 'redux-thunk';  // "thunk" is right
 let initialState = { 
 	searchURL: {searchURL: "https://www.librivox.org", isFetching: false },
 	titleFilter: "",
-	bookData: { data: [], lastUpdated: null },
-	currentBook: {}
+	bookData: { data: [], lastUpdated: null }
 };
 
 // let storeDefault = null;  // turns state completely null and nothing displays
