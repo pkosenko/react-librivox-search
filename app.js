@@ -4,19 +4,20 @@ import React from 'react';
 import librivoxStore from './js/stores/librivox-store';
 import * as librivoxActions from './js/actions/librivox-actions';  // This is not importing correctly?
 import ReactDOM from 'react-dom';  // Why not directly from React?
-import { Router, Route, Link, browserHistory, IndexRoute } from 'react-router';  // unless we plan on using redux-react-router
+import { Router, Route, Link, /* browserHistory,*/ IndexRoute } from 'react-router';  // unless we plan on using redux-react-router
 import { Provider, connect } from 'react-redux';
-import { useRouterHistory } from 'react-router'
-import { createHistory } from 'history'
+import { useRouterHistory } from 'react-router';
+// import { createHistory } from 'history';  // vs. from 'history' -- react-router has its own history
+// createHistory should not be used, according to Dan Abramov; intended for internal router workings
+// import createBrowserHistory from 'react-router'; // does not work, gives 'createHistory is not a function' error.  Undefined.
+import createBrowserHistory from 'react-router/node_modules/history/lib/createBrowserHistory';
+// import createHashHistory from 'react-router/node_modules/history/lib/createHashHistory';  // causes error : Warning: [react-router] Location "/" did not match any routes
+
+
 
 
 // The top-level Provider is what allows us to `connect` components to the 
-// store using ReactRedux.connect (see components Home and Hero) -- 
-// From other project.
-
-// import { Provider } from 'react-redux'  // not using Provider yet
-
-// global var data -- (mock json data) -- move to mock stores
+// store using ReactRedux.connect -- 
 
 // Search Filter input box -- this component is not being used yet.
 // Uncontrolled component -- no initial input value specified
@@ -75,7 +76,9 @@ var BookDataDisplay = React.createClass({
     },
     */
     propTypes: {
-      data: React.PropTypes.arrayOf(React.PropTypes.object)  // grabs the data
+      data: React.PropTypes.arrayOf(React.PropTypes.object),  // grabs the data -- but do we need this here
+      currentBook: React.PropTypes.object,
+      id: React.PropTypes.string        // I take it that parameters are going to come in as strings, even if they are numbers
     },
     /*
     contextTypes: {
@@ -111,9 +114,12 @@ Warning: Failed Context Types: Invalid context `router` of type `object` supplie
           return null;
         }
         */
+        // something wrong with this.props.currentBook.id
+        // What the fuck?  this.props.params is undefined?  react-router refuses to pass on the data
+
         return (
            <div className='book-data'>
-               <p>BOOK ID: {}</p>
+               <p>BOOK ID: {this.props.id}</p>
                <p>AUTHOR(S): {this.state.authors}</p>
                <p>Title: {}</p>
            </div>
@@ -133,7 +139,9 @@ var SearchResultsDisplay = React.createClass({
     // the React add-ons. Check the render method of `SearchResultsDisplay`.
 
     propTypes: {
-      data: React.PropTypes.arrayOf(React.PropTypes.object)
+      data: React.PropTypes.arrayOf(React.PropTypes.object),  // grabs the data -- but do we need this here
+      currentBook: React.PropTypes.object,
+      id: React.PropTypes.number        // I take it that parameters are going to come in as strings, even if they are numbers
     },
     getDefaultProps: function() {
       return {
@@ -206,10 +214,12 @@ var SearchResultsDisplay = React.createClass({
 });
 
 var BookListItem = React.createClass ({
-  propTypes: {
-    bookObject: React.PropTypes.object
-  },
-  /*
+ 
+ propTypes: {
+      data: React.PropTypes.arrayOf(React.PropTypes.object),  // grabs the data -- but do we need this here
+      currentBook: React.PropTypes.object,
+      id: React.PropTypes.string        // I take it that parameters are going to come in as strings, even if they are numbers
+    },  /*
   contextTypes: {
     router: React.PropTypes.func
   },
@@ -230,10 +240,19 @@ var BookListItem = React.createClass ({
   },
   */
   handleClick: function () {
-    alert('Item Clicked');
+    // alert('Item Clicked');  // works
+    dispatch(saveCurrentBook(this.props.bookObject));
+    alert(); // don't know if this will work her (get stores data)
   },
   // "params={{ id: bookObject.id}}"" in LINK does NOT pass parameters
   // how to set an action on LINK?
+  // When handleClick dispatch is fixed, browserHistory URL linking is broken -- see history= useRouterHistory(createBrowserHistory)
+  // "NetworkError: 404 Not Found - http://jstest.dd:8083/react_librivox_search/book/53"
+  // <p><Link to={"/book/" + bookObject.id}  onClick={this.handleClick}>DISPLAY FULL BOOK DATA</Link></p>
+  // link "/" also does not work -- turns up "no location" -- even if route is redefined -- React is totally fucked up
+  // if "to" is removed, no link display
+
+
   render: function () {
     var bookObject = this.props.bookObject;
     return (
@@ -241,7 +260,7 @@ var BookListItem = React.createClass ({
         <p>BOOK ID: {bookObject.id}</p>
         <p>AUTHOR(S): {bookObject.authors[0].first_name + ' '  + bookObject.authors[0].last_name}</p> 
         <p>TITLE: {bookObject.title}</p>
-        <p><Link to={"/book/" + bookObject.id}  onClick={this.handleClick}>DISPLAY FULL BOOK DATA</Link></p>
+        <p><Link to={"/book/" + bookObject.id} onClick={this.handleClick}>DISPLAY FULL BOOK DATA</Link></p>
         <p>************************</p>
       </div>   
     )  
@@ -249,6 +268,8 @@ var BookListItem = React.createClass ({
 });
 
 /*   
+
+to={"/book/" + bookObject.id}
 
 Notice that the data always returns a maximum of 50 records. That is the default.  Also, returns all last names, so that requires a separate first name
 filter to limit the search results.   BUT it first returns a mixed bag of authors with 50 max . . . so it might be chopping names off the end, unless
@@ -283,12 +304,17 @@ DISPLAY FULL BOOK DATA
 var App = React.createClass({
     // Setting proptypes for data on wrapper class doesn't per se solve the problem of missing search list data.
     // You also have to pass down the properties to child components in the component tag.
+    // Does this need to have the whole store as a prope?
     propTypes: {
-      data: React.PropTypes.arrayOf(React.PropTypes.object)
+      data: React.PropTypes.arrayOf(React.PropTypes.object),  // grabs the data -- but do we need this here
+      currentBook: React.PropTypes.object,
+      id: React.PropTypes.string        // I take it that parameters are going to come in as strings, even if they are numbers
     },
     getDefaultProps: function() {
       return {
-        data: []
+        data: [],
+        currentBook: {},
+        id: 0
     }
   },
 
@@ -303,7 +329,7 @@ var App = React.createClass({
   }
 });
 
-// Basic application component -- but should data be at wrapper level?  Do do we need to repeat proType
+// Basic application component -- but should data be at wrapper level?  Do do we need to repeat propType
 // definitions here?
 var Search = React.createClass({
     propTypes: {
@@ -373,14 +399,23 @@ var Search = React.createClass({
 
 // connect to Redux store
 
-var mapStateToProps = function(state){
+// NOTE: Redux examples do not show the use of the second ownProps optional parameter for mapStateToProps.  This may be where
+// the MISSING passed parameters are getting dropped?  Do you HAVE to PASS THROUGH the components OTHER properties or they get
+// erased/deleted?
+
+var mapStateToProps = function(state, ownProps){
     // I don't GET how this function knows that stores bookData is already in state (is it?)
     // console.log("state in mapStateToProps: " + JSON.stringify(state)); // state
     // console.log("mapStateToProps args: " + arguments[0]); // okay
    console.log("data:state.bookData.data: " + state.bookData.data);
     // I would think that this should be PUTTING bookData into props
     // This component will have access to `appstate.heroes` through `this.props.heroes`
-    return {data: state.bookData.data};  // Not sure what the prop and state data structure is going to be
+    // The following should appear on this.props :
+    return {
+      data: state.bookData.data,  // this is an object
+      currentBook: state.currentBook, // this is an object
+      id: state.currentBook.id  // this is a string?
+    }
 };
 
 // Maps the dispatch actions to the top level of props (makes available as top prop methods if needed).
@@ -401,62 +436,82 @@ export function saveBookData(data)
 export function saveBookDataFetchError(err) 
 */
 // Does this "magically" pass the state of the App component?  No explantion is given in the docs.
-var App2 = connect(mapStateToProps,mapDispatchToProps)(App);  // see connect() function in react-redux
+
+// Connect everything up, using the same props.  This is to try to make everything work, since something
+// is going wrong with the connections when Search is not connected?
+
+var AppConnected = connect(mapStateToProps,mapDispatchToProps)(App);  // see connect() function in react-redux
+
+// Can we get by with only the top component connected?
+
+// var BookDataDisplayConnected = connect(mapStateToProps,mapDispatchToProps)(BookDataDisplay);
+
+//var SearchConnected = connect(mapStateToProps,mapDispatchToProps)(Search);
 
 // Router seems to have a problem trying to start up in a subdirectory.  It resolves "react_librivox_store/index.html" 
-// rather than "/index.html" and hence gives a router error.  It doesn't seem that react-router developers considered
-// the possiblility that a "basePath" variable might be needed for subdirectories.  Wildcard "*" path works (but that is
-// ANY path).
+// rather than "/index.html" and hence gives a router error.  See below for configuring the baseName path to start in
+// a subfolder.
 
-// Warning: [react-router] `Router` no longer defaults the history prop to hash history. Please use the `hashHistory` 
+// NOTE: Warning: [react-router] `Router` no longer defaults the history prop to hash history. Please use the `hashHistory` 
 // singleton instead. http://tiny.cc/router-defaulthistory
 
-/*
+// NOTE: Use the history dependency module contained inside of react-router rather than the full-blown
+// npm history module, which does not even contain createHistory.  Using npm history will cause 'createHistory is
+// not a function' error, since createHistory is not defined.
+// console.log("typeof createHistory: " + typeof createHistory);  // typeof createHistory: undefined
+// Dan Abramov says not to use createHistory in any case
 
-// react-router-redux DOES NOT WORK
+// NOTE: If you implement hash history even once, you have to empty the history cache completely in order to 
+// make sure that browserHistory works right again when it is reimplemented.
 
-const browserHistory = useRouterHistory(createHistory)({
-  basename: 'react_librivox_search'
-});
-// Gives the error "createHistory is not a function".
-
-const history = syncHistoryWithStore(browserHistory, librivoxStore)
-
-*/
-
-// __dirname ends up being "/" . . . so not at all
-// returns the error:   TypeError: _history2.default is not a function
-
-// LOOKS to me like it is configuring the history object with a basename property so that React can use it?
-
-const history = useRouterHistory(createHistory)({
+const history = useRouterHistory(createBrowserHistory)({
   basename: '/react_librivox_search/'
 });
+
 
 // To get a correctly nested app with right and left columns, I will probably have to refactor the current app2
 // into a search component in a left column, with book list below it, then individual book display in the right
 // column.
 
-// what is the difference between component and handler?
+// What is the difference between component and handler (older React router)?
+// react-router will not allow bookdatadisplay to be targeted to a specific div in the index page.
+// It also reloads the entire app whenever a book route is used.  In other words, route "nesting" does not actually
+// work as advertised (in docs).  Does bookdatadisplay need to be a CHILD of IndexRoute in order for properties to 
+// be passed to it?
+
+// book/id: error
+//  Warning: [react-router] Location "book/53" did not match any routes
+// http://jstest.dd:8083/react_librivox_search/book/bundle.js
+// Line 22678
+// Warning: [react-router] Location "book/140" did not match any routes
+// IS this because of the missing first slash -- why ????  Both the route path and the link path have an initial slash, but
+// why is it missing in the error message and in the buried code?
+// Warning: [react-router] Location "book/53" did not match any routes -- no effect when first "/" is removed.
+// parentheses make the :id parameter optional
 
 ReactDOM.render(
   <Provider store={librivoxStore}>
     <Router history={history}>
-      <Route path="index.html" component={App2}>
-        <IndexRoute component={Search}/>
-        <Route path="/book/:id" component={BookDataDisplay}/>
+      <Route path="index.html" component={AppConnected}>
+        <IndexRoute component={Search}>
+          <Route path="book/:id" component={BookDataDisplay}/>
+        </IndexRoute>
       </Route>
     </Router >
   </Provider>, document.getElementById("appdiv"));
-
-// Incorporate into main component, or will require a global object to connect them together
+/*
+ReactDOM.render(
+  <Provider store={librivoxStore}>
+    <Router history={history}>
+       <Route path="/book/:id" component={BookDataDisplayConnected}/>
+    </Router>
+  </Provider>, document.getElementById("bookdata"));
+*/
+// Incorporate into main component, or will require a global object to connect them together?
 // ReactDOM.render(<BookDataDisplay />, document.getElementById("searchdata"));  // "searchdata" isn't the best name -- try "bookdata"
 
 
 /*
-New state: {"data":[{"id":"53","title":"Bleak House","description":"<p>Bleak House is the ninth novel by Charles Dickens, 
-published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens'
-*/
-/*  COPY OUT STUFF
+COPY OUT STUFF HERE TEMPORILY
 
 */

@@ -49,7 +49,8 @@ import thunk from 'redux-thunk';  // "thunk" is right
 let initialState = { 
 	searchURL: {searchURL: "https://www.librivox.org", isFetching: false },
 	titleFilter: "",
-	bookData: { data: [], lastUpdated: null }
+	bookData: { data: [], lastUpdated: null },
+	currentBook: {id: 0}
 };
 
 // let storeDefault = null;  // turns state completely null and nothing displays
@@ -61,6 +62,7 @@ let initialState = {
 // var store = createStore(reducer, initialState, applyMiddleware(thunk));
 
 // thunk functions like a filter on dispatch actions.  It delays the dispatch if the action returns a function (rather than a pure object)
+// Maybe this is what is needed for the saveCurrentBook action.
 let librivoxStore = createStore(rootLibrivoxReducer, initialState, applyMiddleware(thunk));
 
 export default librivoxStore

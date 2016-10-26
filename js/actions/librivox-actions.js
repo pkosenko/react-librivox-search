@@ -16,6 +16,12 @@
  import jsonp from 'jsonp';
 
 
+// mock json data to work offline;  fetch() of json file is not working; two titles only; needs to end }]}]};
+/*
+var data = {books:[{"id":"53","title":"Bleak House","description":"<p>Bleak House is the ninth novel by Charles Dickens, published in 20 monthly parts between March 1852 and September 1853. It is widely held to be one of Dickens' finest and most complete novels, containing one of the most vast, complex and engaging arrays of minor characters and sub-plots in his entire canon. Dickens tells all of these both through the narrative of the novel's heroine, Esther Summerson, and as an omniscient narrator. Memorable characters include the menacing lawyer Tulkinghorn, the friendly but depressive John Jarndyce and the childish Harold Skimpole. The plot concerns a long-running legal dispute (Jarndyce and Jarndyce) which has far-reaching consequences for all involved. (Summary from Wikipedia)<\/p>","url_text_source":"http:\/\/www.gutenberg.org\/etext\/1023","language":"English","copyright_year":"1853","num_sections":"67","url_rss":"http:\/\/librivox.org\/rss\/53","url_zip_file":"http:\/\/www.archive.org\/download\/bleak_house_cl_librivox\/bleak_house_cl_librivox_64kb_mp3.zip","url_project":"http:\/\/en.wikipedia.org\/wiki\/Bleak_House","url_librivox":"http:\/\/librivox.org\/bleak-house-by-charles-dickens\/","url_other":null,"totaltime":"43:30:19","totaltimesecs":156619,"authors":[{"id":"91","first_name":"Charles","last_name":"Dickens","dob":"1812","dod":"1870"}]},
+{"id":"140","title":"Christmas Carol","description":"<p>A classic tale of what comes to those whose hearts are hard. In a series of ghostly visits, Scrooge visits his happy past, sees the difficulties of the present, views a bleak future, and in the end amends his mean ways. (Summary written by Kristen McQuillin)<p>","url_text_source":"http:\/\/www.gutenberg.org\/etext\/46","language":"English","copyright_year":"1843","num_sections":"5","url_rss":"http:\/\/librivox.org\/rss\/140","url_zip_file":"http:\/\/www.archive.org\/download\/A_Christmas_Carol\/A_Christmas_Carol_64kb_mp3.zip","url_project":"http:\/\/en.wikipedia.org\/wiki\/A_Christmas_Carol","url_librivox":"http:\/\/librivox.org\/a-christmas-carol-by-charles-dickens\/","url_other":null,"totaltime":"3:14:29","totaltimesecs":11669,"authors":[{"id":"91","first_name":"Charles","last_name":"Dickens","dob":"1812","dod":"1870"}]}]};
+*/
+
  //  previous action type constants
  //  SAVE_LIBRIVOX_DATA   // ????
  //  UPDATE_LIBRIVOX_DATA  // When new data is returned by search
@@ -45,6 +51,8 @@ export const BOOK_TITLE_FILTER = 'BOOK_TITLE_FILTER';
 export const GET_BOOK = 'GET_BOOK'; 
 // Save the Search URL in case needed for orepeat search, or just for information
 export const SAVE_SEARCHURL = 'SAVE_SEARCHURL';
+// save the current selected book data
+export const SAVE_CURRENT_BOOK = 'SAVE_CURRENT_BOOK';
 
 // Librivox API gives "404 Not Found" if no data is returned for 
 // an author name. That is incorrect use of the 
@@ -52,6 +60,23 @@ export const SAVE_SEARCHURL = 'SAVE_SEARCHURL';
 // If searchTerm is left blank, the API returns fifty items, 
 // starting with the beginning of the librivox list.  Not 
 // especially useful . . . so just cancel the search?
+
+// Save the current book object to stores -- function wrapper
+export function saveCurrentBook(currentBook = {}) {
+     console.log('Save Current Book action engaged: ' + currentBook);
+     // thunk -- pass in dispatch and getState (if needed)
+     return (dispatch) => { 
+     	dispatch(saveCurrentBookDelayed(currentBook)); // We are bascially wrapping the function to delay it
+     }
+}
+
+// wrapped action -- maybe names should be reversed. This is the actual dispatch used as callback by the wrapper.
+function saveCurrentBookDelayed(currentBook) {
+ 	return {
+ 	   	type: SAVE_CURRENT_BOOK,
+     	currentBook: currentBook
+     }
+ }
     
 export function saveSearchURL(searchURL) {
 	// console.log('searchURL action engaged.')
@@ -86,7 +111,13 @@ export function getBookData (searchType = 'author/', searchTerm) {
     // dispatch(saveSearchURL(searchURL));  // undefined?  dispatch search URL to stores
     // searchURL should be stored in the store by now???
     // jsonp(url, opts, fn){
-    return (dispatch) => {
+    return (dispatch) => {  // this is a thunk -- action function returns a function
+    	
+    	// Hardcoded TEST data -- var data defined above -- comment out jsonp(); fetch() did not work to grab a .json FILE -- dumped code.
+      /*
+  		dispatch(saveBookData(data.books));  // data is an object, books is an array
+	    dispatch(saveSearchURL(searchURL));
+      */
     	jsonp(searchURL, {}, function (err, data) {
 	        if (data) {
 	            // console.log('data: ' + JSON.stringify(data)); 
@@ -110,7 +141,7 @@ export function getBookData (searchType = 'author/', searchTerm) {
 
 
 // Store the returned book data object in the application's store.
-// Not sure that this should take "jsonp" as a parameter.
+// This is the complete jsonp list of books
 
 export function saveBookData(data) {
 	return {

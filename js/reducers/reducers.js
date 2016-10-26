@@ -22,8 +22,24 @@ import * as librivoxActions from '../actions/librivox-actions';
 const rootLibrivoxReducer = combineReducers({
   searchURL,
   titleFilter,
-  bookData // the entire return JSON from librivox search
+  bookData,  // the entire return JSON from librivox search
+  currentBook   // The currently displayed individual book (or none)
 })
+
+function currentBook(state = {}, action) {
+  console.log('reducer currentBook was called with state', state, 'and action', action);
+  switch (action.type) {
+    case librivoxActions.SAVE_CURRENT_BOOK:
+      newState = {
+        // Need to return an immutable state object; state + new data
+        ...state, currentBook: action.saveCurrentBook
+      };
+      console.log("currentBook: " + JSON.stringify(newState));
+      return newState;
+    default:
+      return state;
+  }
+}
 
 // This reducer saves the current search URL to the store
 // The action itself calls the JSONP, which needs another action to wait on the return of data?
@@ -71,7 +87,7 @@ function bookData(state = {}, action) {
         // this is getting to be a fucking nightmare.
         // how to we call the JSON data action?
       };
-      console.log("New state: " + JSON.stringify(newState));  // an array of objects = 
+      // console.log("New state: " + JSON.stringify(newState));  // an array of objects = 
       return newState;
     case librivoxActions.BOOK_DATA_FETCH_ERROR:
       return {
